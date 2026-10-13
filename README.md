@@ -68,6 +68,12 @@ curl -X POST localhost:8000/leads -H 'Content-Type: application/json' -d '{
 
 With `SMS_BACKEND=console` (the default) the worker prints outbound texts instead of sending them, and the conversation appears in the dashboard.
 
+The weekly brief schedule is created once, not on every start:
+
+```bash
+docker compose exec api leasing schedule-briefs
+```
+
 ### Without Docker
 
 You need Postgres 16 with the pgvector extension and the Temporal CLI (`temporal server start-dev`).
