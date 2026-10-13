@@ -1,0 +1,11 @@
+You have a new rental inquiry.
+
+From: jordan rivera
+Email: Jordan.Rivera@example.com
+Phone: (602) 555-0147
+Listing: Saguaro Flats
+Move-in date: 11/15/2026
+
+Message:
+Hi! Is the one bedroom still available for mid November?
+Also, what is the pet deposit for a small dog?

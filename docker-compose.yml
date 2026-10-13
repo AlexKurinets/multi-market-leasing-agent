@@ -1,0 +1,66 @@
+# Local stack: Postgres + pgvector, a Temporal dev server, the API, the worker and the dashboard.
+# Copy .env.example to .env and set ANTHROPIC_API_KEY before `docker compose up --build`.
+
+x-app: &app
+  build: .
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/leasing
+    TEMPORAL_ADDRESS: temporal:7233
+    DASHBOARD_ORIGIN: http://localhost:3000
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.1-pg16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: leasing
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      retries: 20
+
+  temporal:
+    # Single-binary dev server with its web UI on :8233. Use Temporal Cloud or a full cluster
+    # in production.
+    image: temporalio/temporal:1.9.1
+    command: ["server", "start-dev", "--ip", "0.0.0.0"]
+    ports: ["7233:7233", "8233:8233"]
+
+  migrate:
+    <<: *app
+    command: ["sh", "-c", "leasing init-db && leasing seed"]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    <<: *app
+    command: ["leasing", "api"]
+    ports: ["8000:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      temporal: { condition: service_started }
+
+  worker:
+    <<: *app
+    command: ["leasing", "worker"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      temporal: { condition: service_started }
+
+  dashboard:
+    build:
+      context: ./dashboard
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    environment:
+      API_URL: http://api:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+volumes:
+  pgdata:

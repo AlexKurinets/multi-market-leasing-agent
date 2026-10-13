@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+evals/results/
+
+dashboard/node_modules/
+dashboard/.next/
+dashboard/next-env.d.ts
